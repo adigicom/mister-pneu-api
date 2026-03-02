@@ -1,0 +1,26 @@
+# Dépendances
+node_modules/
+
+# Export DB (données sensibles, trop volumineux pour git)
+db-export/
+
+# Variables d'environnement (JAMAIS dans git)
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

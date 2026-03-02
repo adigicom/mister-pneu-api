@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: mister-pneu-api
+    env: node
+    region: frankfurt
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: FRONTEND_URL
+        value: https://demo-adigicom.netlify.app
+      - key: ALLOWED_ORIGINS
+        value: https://demo-adigicom.netlify.app
+      - key: GATEWAY_API_URL
+        value: https://customers.inter-sprint.nl/scripts/cgirpc32.dll/ww0800
+      - key: GATEWAY_USERNAME
+        sync: false
+      - key: GATEWAY_PASSWORD
+        sync: false
+      - key: PLATE_API_TOKEN
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: PROFIT_MARGIN
+        value: "0.30"
+      - key: DEFAULT_DELIVERY_DAYS_IN_STOCK
+        value: "2"
+      - key: DEFAULT_DELIVERY_DAYS_OUT_OF_STOCK
+        value: "5"
+      - key: SYNC_INTERVAL_HOURS
+        value: "8"
