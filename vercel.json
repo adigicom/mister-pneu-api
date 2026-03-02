@@ -11,9 +11,5 @@
       "src": "/(.*)",
       "dest": "src/server.js"
     }
-  ],
-  "deploymentProtection": {
-    "production": "none",
-    "preview": "none"
-  }
+  ]
 }
