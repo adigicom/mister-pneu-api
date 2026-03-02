@@ -172,20 +172,61 @@ function findTireSizes(marque, modele) {
   return null;
 }
 
+/**
+ * Plaques de démonstration pour la présentation client.
+ * En production, le client branche son token API (39€/mois illimité)
+ * sur apiplaqueimmatriculation.com et les vraies données remplacent celles-ci.
+ */
+const DEMO_PLATES = {
+  'FM643XW': { marque: 'Peugeot', modele: '308', version: '308 II 1.2 PureTech 130ch', dateMiseEnCirculation: '2021-06-15', energie: 'Essence', puissanceFiscale: '7', photoModele: '' },
+  'GH452AB': { marque: 'Renault', modele: 'Clio', version: 'Clio V 1.0 TCe 100ch', dateMiseEnCirculation: '2022-03-20', energie: 'Essence', puissanceFiscale: '5', photoModele: '' },
+  'EF789CD': { marque: 'Citroën', modele: 'C3', version: 'C3 III 1.2 PureTech 83ch', dateMiseEnCirculation: '2020-09-10', energie: 'Essence', puissanceFiscale: '5', photoModele: '' },
+  'DL321EF': { marque: 'Volkswagen', modele: 'Golf', version: 'Golf VIII 1.5 TSI 150ch', dateMiseEnCirculation: '2023-01-05', energie: 'Essence', puissanceFiscale: '8', photoModele: '' },
+  'AB123CD': { marque: 'BMW', modele: '3 Series', version: '320d xDrive 190ch', dateMiseEnCirculation: '2022-07-12', energie: 'Diesel', puissanceFiscale: '10', photoModele: '' },
+  'CK987GH': { marque: 'Toyota', modele: 'Yaris', version: 'Yaris IV 1.5 Hybride 116ch', dateMiseEnCirculation: '2021-11-30', energie: 'Hybride', puissanceFiscale: '4', photoModele: '' },
+  'FP456LM': { marque: 'Mercedes', modele: 'Classe A', version: 'A 200 163ch', dateMiseEnCirculation: '2023-04-18', energie: 'Essence', puissanceFiscale: '9', photoModele: '' },
+  'BN234QR': { marque: 'Audi', modele: 'A3', version: 'A3 Sportback 35 TFSI 150ch', dateMiseEnCirculation: '2022-08-22', energie: 'Essence', puissanceFiscale: '8', photoModele: '' },
+  'GT567ST': { marque: 'Dacia', modele: 'Sandero', version: 'Sandero III 1.0 TCe 90ch', dateMiseEnCirculation: '2021-05-14', energie: 'Essence', puissanceFiscale: '5', photoModele: '' },
+  'HK890UV': { marque: 'Ford', modele: 'Focus', version: 'Focus IV 1.0 EcoBoost 125ch', dateMiseEnCirculation: '2020-12-03', energie: 'Essence', puissanceFiscale: '6', photoModele: '' },
+};
+
 class PlateService {
   constructor() {
     this.apiUrl = 'https://api.apiplaqueimmatriculation.com/plaque';
-    this.token = process.env.PLATE_API_TOKEN || 'TokenDemo2026B';
+    this.token = process.env.PLATE_API_TOKEN || '';
   }
 
   /**
    * Rechercher un véhicule par plaque française
-   * @param {string} plate - Plaque au format AA-123-BB ou AA123BB
-   * @returns {object} Infos véhicule + dimensions pneus recommandées
+   * Mode démo si pas de token API configuré, sinon appel API réel
    */
   async lookupPlate(plate) {
     const cleanPlate = plate.replace(/[-\s]/g, '').toUpperCase();
 
+    // Mode démo : utiliser les plaques pré-enregistrées si pas de token API
+    if (!this.token || this.token === 'TokenDemo2026B') {
+      const demo = DEMO_PLATES[cleanPlate];
+      if (demo) {
+        const tireSizes = findTireSizes(demo.marque, demo.modele);
+        return {
+          plate: cleanPlate,
+          vehicle: {
+            marque: demo.marque,
+            modele: demo.modele,
+            version: demo.version,
+            dateMiseEnCirculation: demo.dateMiseEnCirculation,
+            energie: demo.energie,
+            puissanceFiscale: demo.puissanceFiscale,
+            photoModele: demo.photoModele,
+          },
+          tireSizes: tireSizes || [],
+          tireSizesFound: !!tireSizes,
+        };
+      }
+      throw new Error('Véhicule non trouvé. Plaques démo disponibles : FM643XW, GH452AB, EF789CD, DL321EF, AB123CD, CK987GH');
+    }
+
+    // Mode production : appel API réel avec token client
     try {
       const response = await axios.post(this.apiUrl, null, {
         params: {
@@ -203,7 +244,6 @@ class PlateService {
         throw new Error(data?.error || 'Véhicule non trouvé pour cette plaque');
       }
 
-      // Extraire les infos véhicule
       const vehicleData = data.data || data;
       const marque = vehicleData.marque || vehicleData.brand || '';
       const modele = vehicleData.modele || vehicleData.model || '';
@@ -214,7 +254,6 @@ class PlateService {
       const photoModele = vehicleData.photo_modele || '';
       const sraCommercial = vehicleData.sra_commercial || '';
 
-      // Chercher les dimensions de pneus adaptées
       const tireSizes = findTireSizes(marque, modele);
 
       return {
