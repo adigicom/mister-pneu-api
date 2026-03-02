@@ -40,7 +40,7 @@ app.use(cors({
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
     // Autoriser tous les sous-domaines netlify.app et onrender.com en dev
-    if (origin.endsWith('.netlify.app') || origin.endsWith('.onrender.com')) {
+    if (origin.endsWith('.netlify.app') || origin.endsWith('.onrender.com') || origin.endsWith('.vercel.app')) {
       return callback(null, true);
     }
     callback(new Error(`CORS: origine non autorisée: ${origin}`));
