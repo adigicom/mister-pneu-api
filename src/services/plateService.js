@@ -205,25 +205,7 @@ class PlateService {
 
     // Mode démo : utiliser les plaques pré-enregistrées si pas de token API
     if (!this.token || this.token === 'TokenDemo2026B') {
-      const demo = DEMO_PLATES[cleanPlate];
-      if (demo) {
-        const tireSizes = findTireSizes(demo.marque, demo.modele);
-        return {
-          plate: cleanPlate,
-          vehicle: {
-            marque: demo.marque,
-            modele: demo.modele,
-            version: demo.version,
-            dateMiseEnCirculation: demo.dateMiseEnCirculation,
-            energie: demo.energie,
-            puissanceFiscale: demo.puissanceFiscale,
-            photoModele: demo.photoModele,
-          },
-          tireSizes: tireSizes || [],
-          tireSizesFound: !!tireSizes,
-        };
-      }
-      throw new Error('Véhicule non trouvé. Plaques démo disponibles : FM643XW, GH452AB, EF789CD, DL321EF, AB123CD, CK987GH');
+      return this._lookupDemoPlate(cleanPlate);
     }
 
     // Mode production : appel API réel avec token client
@@ -272,13 +254,40 @@ class PlateService {
       };
     } catch (error) {
       if (error.response?.status === 401) {
-        throw new Error('Token API plaque invalide. Vérifiez PLATE_API_TOKEN dans .env');
+        // Token invalide → basculer en mode démo plutôt que bloquer l'utilisateur
+        console.warn('PLATE_API_TOKEN invalide (401), bascule en mode démo.');
+        return this._lookupDemoPlate(cleanPlate);
       }
       if (error.response?.status === 429) {
         throw new Error('Limite de requêtes API plaque atteinte. Réessayez plus tard.');
       }
       throw error;
     }
+  }
+
+  /**
+   * Recherche en mode démo (plaques pré-enregistrées)
+   */
+  _lookupDemoPlate(cleanPlate) {
+    const demo = DEMO_PLATES[cleanPlate];
+    if (demo) {
+      const tireSizes = findTireSizes(demo.marque, demo.modele);
+      return {
+        plate: cleanPlate,
+        vehicle: {
+          marque: demo.marque,
+          modele: demo.modele,
+          version: demo.version,
+          dateMiseEnCirculation: demo.dateMiseEnCirculation,
+          energie: demo.energie,
+          puissanceFiscale: demo.puissanceFiscale,
+          photoModele: demo.photoModele,
+        },
+        tireSizes: tireSizes || [],
+        tireSizesFound: !!tireSizes,
+      };
+    }
+    throw new Error('Plaque non reconnue. Utilisez la recherche par dimensions (ex : 205/55 R16).');
   }
 }
 
