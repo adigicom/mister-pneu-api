@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Product from '../models/Product.js';
 import gatewayService from '../services/gatewayService.js';
 import syncService from '../services/syncService.js';
@@ -452,6 +453,226 @@ export const triggerSync = async (req, res) => {
       message: 'Erreur lors de la synchronisation',
       ...(process.env.NODE_ENV === 'development' && { error: error.message }),
     });
+  }
+};
+
+// ========== ADMIN : Pneus Occasion ==========
+
+/**
+ * Lister les pneus occasion (isUsed: true)
+ */
+export const listUsedTires = async (req, res) => {
+  try {
+    const products = await Product.find({ isUsed: true }).sort({ createdAt: -1 });
+    res.json({ success: true, data: products });
+  } catch (error) {
+    console.error('Error in listUsedTires:', error);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+};
+
+/**
+ * Créer un pneu occasion
+ */
+export const createUsedTire = async (req, res) => {
+  try {
+    const { brand, width, height, diameter, season, sellingPrice, condition, description, treadDepth, yearOfManufacture, quantity, imageUrl } = req.body;
+
+    const product = new Product({
+      brand,
+      width: parseInt(width),
+      height: parseInt(height),
+      diameter: parseInt(diameter),
+      season: season || 'none',
+      sellingPrice: parseFloat(sellingPrice),
+      netPrice: parseFloat(sellingPrice),
+      condition: condition || 'good',
+      description: description || `${brand} ${width}/${height}R${diameter} occasion`,
+      treadDepth: treadDepth ? parseFloat(treadDepth) : undefined,
+      yearOfManufacture: yearOfManufacture ? parseInt(yearOfManufacture) : undefined,
+      available: parseInt(quantity) || 1,
+      inStock: true,
+      category: 'tires',
+      isUsed: true,
+      imageUrl: imageUrl || '',
+      articleSystemNumber: `USED-${new mongoose.Types.ObjectId()}`,
+      articleCode: `USED-${Date.now()}`,
+    });
+
+    await product.save();
+    res.status(201).json({ success: true, data: product });
+  } catch (error) {
+    console.error('Error in createUsedTire:', error);
+    res.status(500).json({ success: false, message: error.message || 'Erreur serveur' });
+  }
+};
+
+/**
+ * Mettre à jour un pneu occasion
+ */
+export const updateUsedTire = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = { ...req.body };
+
+    if (updates.quantity !== undefined) {
+      updates.available = parseInt(updates.quantity);
+      updates.inStock = updates.available > 0;
+      delete updates.quantity;
+    }
+    if (updates.sellingPrice !== undefined) {
+      updates.sellingPrice = parseFloat(updates.sellingPrice);
+      updates.netPrice = updates.sellingPrice;
+    }
+
+    const product = await Product.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Produit non trouvé' });
+    }
+    res.json({ success: true, data: product });
+  } catch (error) {
+    console.error('Error in updateUsedTire:', error);
+    res.status(500).json({ success: false, message: error.message || 'Erreur serveur' });
+  }
+};
+
+/**
+ * Supprimer un pneu occasion
+ */
+export const deleteUsedTire = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findByIdAndDelete(id);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Produit non trouvé' });
+    }
+    res.json({ success: true, message: 'Produit supprimé' });
+  } catch (error) {
+    console.error('Error in deleteUsedTire:', error);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+};
+
+// ========== ADMIN : Boutique ==========
+
+/**
+ * Lister les produits boutique (category: 'shop')
+ */
+export const listShopAdmin = async (req, res) => {
+  try {
+    const products = await Product.find({ category: 'shop' }).sort({ createdAt: -1 });
+    res.json({ success: true, data: products });
+  } catch (error) {
+    console.error('Error in listShopAdmin:', error);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+};
+
+/**
+ * Créer un produit boutique
+ */
+export const createShopProduct = async (req, res) => {
+  try {
+    const { name, description, brand, sellingPrice, quantity, imageUrl } = req.body;
+
+    const product = new Product({
+      productName: name,
+      brand: brand || 'Mister Pneu',
+      description: description || name || '',
+      sellingPrice: parseFloat(sellingPrice),
+      netPrice: parseFloat(sellingPrice),
+      available: parseInt(quantity) || 1,
+      inStock: true,
+      imageUrl: imageUrl || '',
+      category: 'shop',
+      articleSystemNumber: `SHOP-${new mongoose.Types.ObjectId()}`,
+      articleCode: `SHOP-${Date.now()}`,
+    });
+
+    await product.save();
+    res.status(201).json({ success: true, data: product });
+  } catch (error) {
+    console.error('Error in createShopProduct:', error);
+    res.status(500).json({ success: false, message: error.message || 'Erreur serveur' });
+  }
+};
+
+/**
+ * Mettre à jour un produit boutique
+ */
+export const updateShopProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = { ...req.body };
+
+    if (updates.name !== undefined) {
+      updates.productName = updates.name;
+      delete updates.name;
+    }
+    if (updates.quantity !== undefined) {
+      updates.available = parseInt(updates.quantity);
+      updates.inStock = updates.available > 0;
+      delete updates.quantity;
+    }
+    if (updates.sellingPrice !== undefined) {
+      updates.sellingPrice = parseFloat(updates.sellingPrice);
+      updates.netPrice = updates.sellingPrice;
+    }
+
+    const product = await Product.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Produit non trouvé' });
+    }
+    res.json({ success: true, data: product });
+  } catch (error) {
+    console.error('Error in updateShopProduct:', error);
+    res.status(500).json({ success: false, message: error.message || 'Erreur serveur' });
+  }
+};
+
+/**
+ * Supprimer un produit boutique
+ */
+export const deleteShopProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findByIdAndDelete(id);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Produit non trouvé' });
+    }
+    res.json({ success: true, message: 'Produit supprimé' });
+  } catch (error) {
+    console.error('Error in deleteShopProduct:', error);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+};
+
+// ========== ADMIN : Upload Image ==========
+
+/**
+ * Upload d'image en base64
+ */
+export const uploadImage = async (req, res) => {
+  try {
+    const { image, filename } = req.body;
+
+    if (!image) {
+      return res.status(400).json({ success: false, message: 'Image manquante' });
+    }
+
+    // Retourner directement l'URL base64 (data URI)
+    const imageUrl = image.startsWith('data:') ? image : `data:image/jpeg;base64,${image}`;
+
+    res.json({
+      success: true,
+      data: {
+        imageUrl,
+        filename: filename || `upload-${Date.now()}.jpg`,
+      },
+    });
+  } catch (error) {
+    console.error('Error in uploadImage:', error);
+    res.status(500).json({ success: false, message: 'Erreur lors de l\'upload' });
   }
 };
 

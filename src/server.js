@@ -78,7 +78,7 @@ app.use((req, res, next) => {
   if (req.originalUrl === '/api/orders/webhook/stripe') {
     next();
   } else {
-    express.json()(req, res, next);
+    express.json({ limit: '10mb' })(req, res, next);
   }
 });
 

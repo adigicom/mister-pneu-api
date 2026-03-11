@@ -5,13 +5,12 @@ const productSchema = new mongoose.Schema(
     // Informations Gateway ISB-IT
     articleSystemNumber: {
       type: String,
-      required: true,
       unique: true,
+      sparse: true,
       index: true,
     },
     articleCode: {
       type: String,
-      required: true,
     },
 
     // Informations de base
@@ -23,7 +22,7 @@ const productSchema = new mongoose.Schema(
     groupNumber: String,
     description: {
       type: String,
-      required: true,
+      default: '',
     },
     productName: String, // Pour les pneus
 
@@ -34,7 +33,6 @@ const productSchema = new mongoose.Schema(
     },
     netPrice: {
       type: Number,
-      required: true,
     },
     grossPrice: Number,
     garagePrice: Number,
@@ -138,7 +136,7 @@ const productSchema = new mongoose.Schema(
     // Métadonnées
     category: {
       type: String,
-      enum: ['tires', 'wheels', 'accessories'],
+      enum: ['tires', 'wheels', 'accessories', 'shop'],
       default: 'tires',
     },
     season: {

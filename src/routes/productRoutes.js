@@ -9,6 +9,15 @@ import {
   getBrands,
   triggerSync,
   getSyncStatus,
+  listUsedTires,
+  createUsedTire,
+  updateUsedTire,
+  deleteUsedTire,
+  listShopAdmin,
+  createShopProduct,
+  updateShopProduct,
+  deleteShopProduct,
+  uploadImage,
 } from '../controllers/productController.js';
 import { validate } from '../middleware/validate.js';
 import {
@@ -19,8 +28,28 @@ import {
   checkStockRules,
   shopProductsRules,
 } from '../middleware/validators.js';
+import adminAuth from '../middleware/adminAuth.js';
 
 const router = express.Router();
+
+// ========== Routes Admin ==========
+
+// Pneus occasion
+router.get('/used', adminAuth, listUsedTires);
+router.post('/used', adminAuth, createUsedTire);
+router.put('/used/:id', adminAuth, updateUsedTire);
+router.delete('/used/:id', adminAuth, deleteUsedTire);
+
+// Boutique admin
+router.get('/shop-admin', adminAuth, listShopAdmin);
+router.post('/shop-admin', adminAuth, createShopProduct);
+router.put('/shop-admin/:id', adminAuth, updateShopProduct);
+router.delete('/shop-admin/:id', adminAuth, deleteShopProduct);
+
+// Upload image
+router.post('/upload', adminAuth, uploadImage);
+
+// ========== Routes Publiques ==========
 
 // Boutique - liste paginée avec filtres
 router.get('/shop', shopProductsRules, validate, getShopProducts);
