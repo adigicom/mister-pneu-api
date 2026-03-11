@@ -22,6 +22,10 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'https://demo-adigicom.netlify.app',
+  'https://mister-pneus.com',
+  'https://www.mister-pneus.com',
+  'https://misterpneu.fr',
+  'https://www.misterpneu.fr',
 ];
 
 // Ajouter les origines supplémentaires depuis la variable d'environnement
